@@ -64,6 +64,7 @@ module DearImGui
 
   , begin
   , beginWithClose
+  , beginWithCloseAndFlags
   , Raw.end
 
     -- ** Utilities
@@ -546,11 +547,15 @@ begin name = liftIO do
 --
 -- Always call 'end' regardless of return values.
 beginWithClose :: MonadIO m => Text -> m (Bool, Bool)
-beginWithClose name = liftIO $
+beginWithClose name = beginWithCloseAndFlags name (ImGuiWindowFlags 0)
+
+-- | Like 'beginWithClose', but with additional 'ImGuiWindowFlags'.
+beginWithCloseAndFlags :: MonadIO m => Text -> ImGuiWindowFlags -> m (Bool, Bool)
+beginWithCloseAndFlags name flags = liftIO $
   alloca $ \openPtr ->
     Text.withCString name $ \namePtr -> do
       poke openPtr 1
-      visible <- Raw.begin namePtr (Just openPtr) Nothing
+      visible <- Raw.begin namePtr (Just openPtr) (Just flags)
       stillOpen <- toBool <$> peek openPtr
       pure (visible, stillOpen)
 
